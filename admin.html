@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALHALLA - Panel Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #d4af37;
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #d4af37;
+            letter-spacing: 0.5rem;
+            font-weight: 100;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(212,175,55,0.05);
+            border-radius: 8px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            color: #d4af37;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        input, select, button {
+            padding: 0.8rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        button {
+            background: #d4af37;
+            color: #000;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #ffd700;
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(212,175,55,0.08);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(212,175,55,0.2);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            color: #d4af37;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(212,175,55,0.1);
+            color: #d4af37;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #d4af37;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        tr:hover {
+            background: rgba(212,175,55,0.05);
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: rgba(255,165,0,0.2);
+            color: #ffa500;
+        }
+
+        .status-confirmed {
+            background: rgba(81,207,102,0.2);
+            color: #51cf66;
+        }
+
+        .status-cancelled {
+            background: rgba(255,107,107,0.2);
+            color: #ff6b6b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .error {
+            background: rgba(255,107,107,0.1);
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #d4af37;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VALHALLA</h1>
+            <p style="color: #999; margin-top: 0.5rem;">Panel de Administración de Reservas</p>
+        </header>
+
+        <!-- Estadísticas -->
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalReservations">-</div>
+                <div class="stat-label">Total Reservas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="todayReservations">-</div>
+                <div class="stat-label">Reservas Hoy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="uniqueClients">-</div>
+                <div class="stat-label">Clientes Únicos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingReservations">-</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="filterEmail">Email</label>
+                <input type="email" id="filterEmail" placeholder="cliente@email.com">
+            </div>
+            <div class="filter-group">
+                <label for="filterDate">Fecha</label>
+                <input type="date" id="filterDate">
+            </div>
+            <div class="filter-group">
+                <label for="filterStatus">Estado</label>
+                <select id="filterStatus">
+                    <option value="">Todos</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="confirmed">Confirmada</option>
+                    <option value="cancelled">Cancelada</option>
+                </select>
+            </div>
+            <div class="filter-group" style="justify-content: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="applyFilters()">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <!-- Tabla de Reservas -->
+        <div class="table-container">
+            <div id="loading" class="loading">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #d4af37;"></i>
+                <p style="margin-top: 1rem;">Cargando reservas...</p>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-inbox"></i>
+                <p>No hay reservas para mostrar</p>
+            </div>
+
+            <table id="reservationsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Invitados</th>
+                        <th>Estado</th>
+                        <th>Creada</th>
+                    </tr>
+                </thead>
+                <tbody id="reservationsBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button id="prevBtn" onclick="prevPage()" disabled>
+                <i class="fas fa-chevron-left"></i> Anterior
+            </button>
+            <span id="pageInfo" style="color: #999;">-</span>
+            <button id="nextBtn" onclick="nextPage()" disabled>
+                Siguiente <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuración
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:7071/api/GetReservations'
+            : 'https://valhalla-api.azurewebsites.net/api/GetReservations';
+
+        let currentPage = 0;
+        const itemsPerPage = 20;
+        let currentFilters = {};
+
+        // Cargar reservas
+        async function loadReservations() {
+            const loading = document.getElementById('loading');
+            const table = document.getElementById('reservationsTable');
+            const emptyState = document.getElementById('emptyState');
+            const errorMessage = document.getElementById('errorMessage');
+
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            emptyState.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            try {
+                const params = new URLSearchParams({
+                    limit: itemsPerPage,
+                    offset: currentPage * itemsPerPage,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`${API_URL}?${params}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar reservas');
+                }
+
+                const data = await response.json();
+
+                loading.style.display = 'none';
+
+                if (data.data.length === 0) {
+                    emptyState.style.display = 'block';
+                    updatePagination(data.pagination);
+                    return;
+                }
+
+                table.style.display = 'table';
+                renderTable(data.data);
+                updatePagination(data.pagination);
+                updateStats(data.data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                loading.style.display = 'none';
+                errorMessage.textContent = 'Error al cargar las reservas: ' + error.message;
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        // Renderizar tabla
+        function renderTable(reservations) {
+            const tbody = document.getElementById('reservationsBody');
+            tbody.innerHTML = '';
+
+            reservations.forEach(res => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-family: monospace; color: #d4af37;">${res.reservation_id}</td>
+                    <td><strong>${res.user_name}</strong></td>
+                    <td>${res.user_email}</td>
+                    <td>${res.user_phone}</td>
+                    <td>${new Date(res.reservation_date).toLocaleDateString('es-MX')}</td>
+                    <td>${res.reservation_time}</td>
+                    <td style="text-align: center;">${res.guests}</td>
+                    <td><span class="status-badge status-${res.status}">${res.status}</span></td>
+                    <td>${new Date(res.created_at).toLocaleString('es-MX')}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Actualizar estadísticas
+        function updateStats(reservations) {
+            const today = new Date().toISOString().split('T')[0];
+            const todayReservations = reservations.filter(r => 
+                r.reservation_date.split('T')[0] === today
+            ).length;
+
+            const uniqueEmails = new Set(reservations.map(r => r.user_email)).size;
+            const pending = reservations.filter(r => r.status === 'pending').length;
+
+            document.getElementById('totalReservations').textContent = reservations.length;
+            document.getElementById('todayReservations').textContent = todayReservations;
+            document.getElementById('uniqueClients').textContent = uniqueEmails;
+            document.getElementById('pendingReservations').textContent = pending;
+        }
+
+        // Actualizar paginación
+        function updatePagination(pagination) {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pageInfo = document.getElementById('pageInfo');
+
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = !pagination.hasMore;
+
+            const start = pagination.offset + 1;
+            const end = Math.min(pagination.offset + pagination.limit, pagination.total);
+            pageInfo.textContent = `Mostrando ${start}-${end} de ${pagination.total}`;
+        }
+
+        // Navegación
+        function nextPage() {
+            currentPage++;
+            loadReservations();
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadReservations();
+            }
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            currentPage = 0;
+            currentFilters = {};
+
+            const email = document.getElementById('filterEmail').value;
+            const date = document.getElementById('filterDate').value;
+            const status = document.getElementById('filterStatus').value;
+
+            if (email) currentFilters.email = email;
+            if (date) currentFilters.date = date;
+            if (status) currentFilters.status = status;
+
+            loadReservations();
+        }
+
+        // Inicializar
+        loadReservations();
+        
+        // Auto-refresh cada 30 segundos
+        setInterval(loadReservations, 30000);
+    </script>
+</body>
+</html>
